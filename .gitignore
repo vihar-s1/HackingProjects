@@ -1,0 +1,7 @@
+# IDE Related
+.idea
+.vscode
+
+# Environment Variables Related
+.venv
+venv
