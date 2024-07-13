@@ -1,3 +1,5 @@
 scapy
 pandas
+tkinter
+openpyxl
 matplotlib

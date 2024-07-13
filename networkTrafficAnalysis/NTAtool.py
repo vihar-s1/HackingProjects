@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
-
 import scapy.all as scapy
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 import pandas as pd
+from openpyxl import Workbook
 from datetime import datetime
 import matplotlib.pyplot as plt
+import time
+
 
 # Global variable to store captured packets
 captured_packets = []
+workbook = Workbook()
 
-
-# Function to capture and process network packets
 # Function to capture and process network packets
 def packet_callback(packet):
     packet_info = {
@@ -43,27 +43,29 @@ def packet_callback(packet):
             'info': f"Type: {packet[ICMP].type}, Code: {packet[ICMP].code}"
         })
     else:
-        packet_info.update({
-            'protocol': 'Other',
-            'info': 'Other type of packet'
-        })
+        return
+    #     packet_info.update({
+    #         'protocol': 'Other',
+    #         'info': 'Other type of packet'
+    #     })
 
     captured_packets.append(packet_info)
+    save_packet_to_excel(packet_info)
     print(packet_info)
 
 
-# Function to start packet capture
-def start_packet_capture(target_interface):
-    scapy.sniff(iface=target_interface, prn=packet_callback, store=False)
+def save_packet_to_excel(packet_info):
+    ws = workbook.active
+    ws.append(list(packet_info.values()))
 
 
-# Function to save captured packets to CSV
-def save_packets_to_csv(file_path):
-    df = pd.DataFrame(captured_packets)
-    df.to_csv(file_path, index=False)
+def start_packet_capture(interface, duration):
+    if duration <= 0:
+        scapy.sniff(iface=interface, prn=packet_callback, store=False)
+    else:
+        scapy.sniff(iface=interface, prn=packet_callback, store=False, timeout=duration)
 
 
-# Function to visualize network traffic
 def visualize_traffic():
     df = pd.DataFrame(captured_packets)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -77,20 +79,28 @@ def visualize_traffic():
     plt.xlabel('Timestamp')
     plt.ylabel('Number of Packets')
     plt.grid(True)
-    # plt.xticks(rotation=45)
+    plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
 
 
-
 if __name__ == "__main__":
     interface = input("Enter the network interface (e.g., eth0, wlan0): ")
-    output_csv = input("Enter the name of the CSV file to save the captured packets: ")
-    print(f"Starting packet capture on {interface}...")
-    start_packet_capture(interface)
+    capture_duration = int(input("Enter the duration to capture packets (in seconds, 0 for non-stop): "))
+    output_path = input("Enter the output file path (default: captured_packets.xlsx): ")
 
-    print(f"Packet capture complete. Saving captured packets to '{output_csv}'...")
-    save_packets_to_csv(output_csv)
+    if not output_path:
+        output_path = "captured_packets.xslx"
 
-    print("Visualizing network traffic...")
+    worksheet = workbook.active
+    worksheet.append(['timestamp', 'source_ip', 'destination_ip', 'protocol', 'info'])
+
+    capture_duration = min(capture_duration, 0)
+    print(f"Starting packet capture on {interface} for {capture_duration} seconds...")
+    start_packet_capture(interface, capture_duration)
+    workbook.save(output_path)
+
+    print(f"Packet capture complete. Data saved to {output_path}")
+    
     visualize_traffic()
+

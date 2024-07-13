@@ -2,66 +2,66 @@
 
 ## Overview
 
-The Network Traffic Analysis Tool is designed to monitor and analyze network traffic to detect anomalies and potential security threats. It captures HTTP requests, logs packet information, and provides visualizations to help identify unusual patterns in network activity.
+The Network Traffic Analysis Tool captures and analyzes network traffic on a specified network interface. It supports capturing various types of network packets, storing the captured data in an Excel file, and visualizing the traffic over time. The tool can be run either via the command line or using a graphical user interface (GUI).
 
 ## Features
 
-- Captures HTTP request packets.
-- Logs source and destination IPs, HTTP method, host, and path.
-- Saves captured packet data to a CSV file.
-- Visualizes network traffic over time.
+- Capture HTTP, TCP, UDP, and ICMP packets.
+- Store captured packet data in an Excel file.
+- Visualize network traffic over time.
+- Run in both terminal mode and GUI mode.
 
 ## Requirements
 
 - Python 3.x
-- Scapy library
-- Pandas library
-- Matplotlib library
-
-<!-- ## Installation
-
-1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/vihar-s1/network-traffic-analysis-tool.git
-    cd network-traffic-analysis-tool
-    ```
-
-2. **Set up a virtual environment**:
-    ```sh
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
-
-3. **Install dependencies**:
-    ```sh
-    pip install -r requirements.txt
-    ``` -->
+- Required Python packages:
+  - `scapy`
+  - `pandas`
+  - `openpyxl`
+  - `matplotlib`
+  - `tkinter` (for GUI)
 
 ## Usage
 
-1. **Run the tool**:
+### Terminal Mode
+
+1. Run the backend script:
     ```sh
-    python3 NTAtool.py
+    sudo python3 NTAtool.py
     ```
 
-2. **Input required information**:
-    - Enter the network interface (e.g., `eth0`, `wlan0`).
-    - Enter the name of the CSV file to save the captured packets.
+2. Follow the prompts to enter the network interface, capture duration, and output file path.
 
-3. **Monitor the output**:
-    - The tool will capture and log HTTP request packets, displaying packet information in real-time.
-    - Once the capture is complete, the data will be saved to the csv file with the given name.
+3. The captured packet data will be saved to the specified Excel file, and a visualization of the network traffic will be displayed.
 
-4. **Visualize network traffic**:
-    - After packet capturing process is terminated, a plot will be displayed showing the number of HTTP requests over time.
+### GUI Mode
+
+1. Run the GUI script:
+    ```sh
+    sudo python3 gui.py
+    ```
+
+2. Enter the network interface and capture duration, and select the output file path.
+
+3. Click "Start Capture" to begin capturing packets. Once the capture is complete, the data will be saved to the specified Excel file.
+
+4. Click "Visualize Traffic" to display a plot of the network traffic over time.
+
+## Project Structure
+
+- `NTAtool.py`: The backend script containing the core functionality for packet capture and analysis.
+- `gui.py`: The GUI script for interacting with the tool through a graphical user interface.
+- `README.md`: This file.
 
 ## Example
 
+### Terminal Mode
+
 ```sh
+$ sudo python3 NTAtool.py
 Enter the network interface (e.g., eth0, wlan0): eth0
-Enter the name of the CSV file to save the captured packets: captured_packets.csv
-Starting packet capture on eth0...
-{'timestamp': '2023-07-11 12:00:01', 'source_ip': '192.168.1.2', 'destination_ip': '93.184.216.34', 'method': 'GET', 'host': 'example.com', 'path': '/index.html'}
+Enter the duration to capture packets (in seconds, 0 for non-stop): 60
+Enter the output file path (default: captured_packets.xlsx): captured_packets.xlsx
+Starting packet capture on eth0 for 60 seconds...
 ...
-Packet capture complete. Saving captured packets to 'captured_packets.csv'...
-Visualizing network traffic...
+Packet capture complete. Data saved to captured_packets.xlsx
