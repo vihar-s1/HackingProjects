@@ -5,3 +5,6 @@
 # Environment Variables Related
 .venv
 venv
+
+# Python related
+__pycache__

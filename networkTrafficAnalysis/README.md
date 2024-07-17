@@ -44,6 +44,7 @@ The Network Traffic Analysis Tool captures and analyzes network traffic on a spe
 2. Enter the network interface and capture duration, and select the output file path.
 
 3. Click "Start Capture" to begin capturing packets. Once the capture is complete, the data will be saved to the specified Excel file.
+	1. If running in end-less mode *(capture_duration = 0)*, then click "Stop Capture" to stop capturing the packets. Data is automatically saved on stoping packet capture.
 
 4. Click "Visualize Traffic" to display a plot of the network traffic over time.
 
