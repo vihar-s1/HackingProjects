@@ -1,0 +1,5 @@
+pyusb
+pyudev
+libusb1
+volatility3
+pandas
