@@ -3,6 +3,7 @@ from threading import Event
 
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import IP, TCP, UDP, ICMP
+from scapy.packet import Packet
 import pandas as pd
 from openpyxl import Workbook
 from datetime import datetime
@@ -23,7 +24,7 @@ class NTA:
         worksheet.title = 'Captured Packets'
         worksheet.append(['timestamp', 'source_ip', 'source_port', 'destination_ip', 'destination_port', 'protocol', 'info'])
         
-    def packet_callback(self, packet):
+    def packet_callback(self, packet: Packet):
         packet_info = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'source_ip': packet[IP].src if packet.haslayer(IP) else None,
@@ -44,6 +45,8 @@ class NTA:
                 'protocol': 'TCP',
                 'source_port': packet[TCP].sport,
                 'destination_port': packet[TCP].dport,
+                'sequence_number': packet[TCP].seq,
+                'acknowledgment_number': packet[TCP].ack
             })
         elif packet.haslayer(UDP):
             packet_info.update({
