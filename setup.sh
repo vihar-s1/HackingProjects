@@ -13,17 +13,17 @@ fi
 log_info "Activating virtual environment..."
 source .venv/bin/activate
 
+log_info "Upgrading pip..."
+pip install --upgrade pip -q -q
+
 # Find all requirements.txt files in the current directory and its subdirectories
 echo -e "\n"
-find . -type f -name "requirements.txt" | while read file; 
+for file in $(find . -type f -name "requirements.txt") 
 do
 	# Install dependencies for each requirements.txt file
 	log_info "Installing dependencies for $file..."
 	python -m pip install -r "$file" -q -q
 done
-
-log_info "Upgrading pip"
-pip install --upgrade pip -q -q
 
 log_info "Deactivating virtual environment..."
 deactivate
