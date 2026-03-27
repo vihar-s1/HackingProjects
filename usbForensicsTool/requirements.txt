@@ -1,0 +1,13 @@
+# Core dependencies
+pyusb>=1.2.1
+pandas>=2.0.0
+
+# Linux USB monitoring
+pyudev>=0.24.0; sys_platform == 'linux'
+
+# macOS USB monitoring
+pyobjc-framework-Cocoa>=9.0; sys_platform == 'darwin'
+pyobjc-framework-IOKit>=9.0; sys_platform == 'darwin'
+
+# Memory analysis (optional)
+volatility3>=1.0.0
