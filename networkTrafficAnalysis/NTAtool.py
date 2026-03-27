@@ -9,21 +9,18 @@ from openpyxl import Workbook
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-# Global variable to store captured packets
-captured_packets = []
-workbook = Workbook()
 
 class NTA:
-    def __init__(self, logEnabled:bool=False) -> None:
+    def __init__(self, log_enabled: bool = False) -> None:
         self.captured_packets = []
         self.workbook = Workbook()
-        self.logEnabled = logEnabled
+        self.log_enabled = log_enabled
         self.stop_event = Event()
-        
+
         worksheet = self.workbook.active
         worksheet.title = 'Captured Packets'
         worksheet.append(['timestamp', 'source_ip', 'source_port', 'destination_ip', 'destination_port', 'protocol', 'info'])
-        
+
     def packet_callback(self, packet: Packet):
         packet_info = {
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -45,8 +42,6 @@ class NTA:
                 'protocol': 'TCP',
                 'source_port': packet[TCP].sport,
                 'destination_port': packet[TCP].dport,
-                'sequence_number': packet[TCP].seq,
-                'acknowledgment_number': packet[TCP].ack
             })
         elif packet.haslayer(UDP):
             packet_info.update({
@@ -57,37 +52,51 @@ class NTA:
         elif packet.haslayer(ICMP):
             packet_info.update({
                 'protocol': 'ICMP',
-                'source_port': packet[ICMP].sport,
-                'destination_port': packet[ICMP].dport,
+                'info': 'ICMP Packet'
             })
         else:
             return
-        #     packet_info.update({
-        #         'protocol': 'Other',
-        #         'info': 'Other type of packet'
-        #     })
 
         self.captured_packets.append(packet_info)
         self.workbook.active.append(list(packet_info.values()))
-        if self.logEnabled: print(packet_info) 
-        
+        if self.log_enabled:
+            print(packet_info)
+
     def start_packet_capture(self, interface, duration):
         self.stop_event.clear()
-        if duration <= 0:
-            while not self.stop_event.is_set():
-                scapy.sniff(iface=interface, prn=self.packet_callback, store=False, timeout=1)
-        else:
-            scapy.sniff(iface=interface, prn=self.packet_callback, store=False, timeout=duration)
+        try:
+            if duration <= 0:
+                while not self.stop_event.is_set():
+                    scapy.sniff(iface=interface, prn=self.packet_callback, store=False, timeout=1)
+            else:
+                scapy.sniff(iface=interface, prn=self.packet_callback, store=False, timeout=duration)
+        except PermissionError:
+            print(f"Error: Permission denied. Try running with sudo.")
+            raise
+        except OSError as e:
+            print(f"Error: Invalid network interface '{interface}'. {e}")
+            raise
+        except Exception as e:
+            print(f"Error during packet capture: {e}")
+            raise
 
     def stop_packet_capture(self):
         self.stop_event.set()
-            
+
     def visualize_traffic(self):
+        if not self.captured_packets:
+            print("No packets to visualize.")
+            return
+
         df = pd.DataFrame(self.captured_packets)
         df['timestamp'] = pd.to_datetime(df['timestamp'])
 
         # Group by each second
         traffic = df.groupby(df['timestamp'].dt.floor('s')).size()
+
+        if traffic.empty:
+            print("No traffic data to visualize.")
+            return
 
         plt.figure(figsize=(10, 6))
         plt.plot(traffic.index, traffic.values, marker='o')
@@ -100,34 +109,45 @@ class NTA:
         plt.show()
 
     def save_excel(self, output_path: str):
-        self.workbook.save(output_path)    
-        if self.logEnabled: print(f"Packet capture complete. Data saved to {output_path}")
+        try:
+            self.workbook.save(output_path)
+            if self.log_enabled:
+                print(f"Packet capture complete. Data saved to {output_path}")
+        except PermissionError:
+            print(f"Error: Permission denied writing to '{output_path}'.")
+            raise
+        except Exception as e:
+            print(f"Error saving Excel file: {e}")
+            raise
 
     def clear_packets(self):
         self.captured_packets.clear()
         self.workbook.close()
         self.workbook = Workbook()
-        if self.logEnabled: print("Packets cleared.")
+        if self.log_enabled:
+            print("Packets cleared.")
 
-    def enableLogging(self):
-        self.logEnabled = True
-    
-    def disableLogging(self):
-        self.logEnabled = False
-       
+    def enable_logging(self):
+        self.log_enabled = True
+
+    def disable_logging(self):
+        self.log_enabled = False
+
 
 if __name__ == "__main__":
-    interface = input("Enter the network interface (e.g., eth0, wlan0): ")
-    capture_duration = int(input("Enter the duration to capture packets (in seconds, 0 for non-stop): "))
-    output_path = input("Enter the output file path (default: captured_packets.xlsx): ")
+    try:
+        interface = input("Enter the network interface (e.g., eth0, wlan0): ")
+        capture_duration = int(input("Enter the duration to capture packets (in seconds, 0 for non-stop): "))
+        output_path = input("Enter the output file path (default: captured_packets.xlsx): ")
 
-    if not output_path:
-        output_path = "captured_packets.xslx"
-        
-    capture_duration = min(capture_duration, 0)
+        if not output_path:
+            output_path = "captured_packets.xlsx"
 
-    nta = NTA(True)
-    nta.start_packet_capture(interface=interface, duration=capture_duration)
-    nta.save_excel(output_path)
-    nta.visualize_traffic()
-        
+        nta = NTA(log_enabled=True)
+        nta.start_packet_capture(interface=interface, duration=capture_duration)
+        nta.save_excel(output_path)
+        nta.visualize_traffic()
+    except KeyboardInterrupt:
+        print("\nCapture interrupted by user.")
+    except Exception as e:
+        print(f"Error: {e}")
