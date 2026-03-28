@@ -1,0 +1,11 @@
+# Keylogger - Educational Input Monitoring Tool
+
+pynput>=1.7.6
+cryptography>=41.0.0
+pyperclip>=1.8.2
+pyautogui>=0.9.54
+
+# Platform-specific dependencies
+pyobjc-framework-Quartz>=9.0; sys_platform == 'darwin'
+pyobjc-framework-Cocoa>=9.0; sys_platform == 'darwin'
+python-xlib>=0.33; sys_platform == 'linux'
